@@ -77,3 +77,10 @@ Traceback (most recent call last):
   File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/.venv/lib/python3.10/site-packages/temporalio/worker/_workflow.py", line 309, in _create_workflow_instance
     raise temporalio.exceptions.ApplicationError(
 temporalio.exceptions.ApplicationError: NotFoundError: Workflow class OrderWorkflow is not registered on this worker, available workflows: OrderApprovalWorkflow
+Failed handling activation on workflow with run ID 7db92bd6-cee4-4046-a7c5-558da4fcfc4e
+Traceback (most recent call last):
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/.venv/lib/python3.10/site-packages/temporalio/worker/_workflow.py", line 201, in _handle_activation
+    workflow = self._create_workflow_instance(act)
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/.venv/lib/python3.10/site-packages/temporalio/worker/_workflow.py", line 309, in _create_workflow_instance
+    raise temporalio.exceptions.ApplicationError(
+temporalio.exceptions.ApplicationError: NotFoundError: Workflow class OrderWorkflow is not registered on this worker, available workflows: OrderApprovalWorkflow

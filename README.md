@@ -12,7 +12,7 @@
 
 1.  **Sao chép Repository:**
     ```bash
-    git clone <your-repo-url> # Thay bằng URL repo của bạn
+    git clone https://github.com/thanhmiyata/order_management_system
     cd order_management_system
     ```
 
