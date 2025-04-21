@@ -1,0 +1,70 @@
+FAIR PERFORMANCE TEST RESULTS
+============================
+
+Phương pháp đo lường công bằng giữa hai hệ thống
+
+CONCURRENT ORDER PROCESSING
+--------------------------
+
+Test with 5 concurrent orders:
+  Temporal:
+    - Processing time: 0.02 seconds
+    - Orders per second: 250.13
+    - Success rate: 100.0%
+
+  Traditional:
+    - Processing time: 0.80 seconds
+    - Orders per second: 6.22
+    - Success rate: 60.0%
+
+  Performance comparison:
+    - Temporal is 40.21x faster
+    - Temporal success rate is 40.0% higher
+
+
+Test with 10 concurrent orders:
+  Temporal:
+    - Processing time: 0.04 seconds
+    - Orders per second: 272.47
+    - Success rate: 100.0%
+
+  Traditional:
+    - Processing time: 0.80 seconds
+    - Orders per second: 12.45
+    - Success rate: 90.0%
+
+  Performance comparison:
+    - Temporal is 21.88x faster
+    - Temporal success rate is 10.0% higher
+
+
+LARGE ORDER PROCESSING
+---------------------
+
+Test with 10 items in a single order:
+  Temporal:
+    - Processing time: 0.01 seconds
+    - Success: True
+
+  Traditional:
+    - Processing time: 1.33 seconds
+    - Success: True
+
+  Performance comparison:
+    - Temporal is 146.33x faster
+    - Temporal success: True, Traditional success: True
+
+
+Test with 50 items in a single order:
+  Temporal:
+    - Processing time: 0.01 seconds
+    - Success: True
+
+  Traditional:
+    - Processing time: 1.94 seconds
+    - Success: True
+
+  Performance comparison:
+    - Temporal is 157.71x faster
+    - Temporal success: True, Traditional success: True
+

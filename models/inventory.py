@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
@@ -19,6 +19,8 @@ class InventoryItem(BaseModel):
     status: InventoryStatus = InventoryStatus.IN_STOCK
     last_updated: datetime = Field(default_factory=datetime.now)
     
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     def available_quantity(self) -> int:
         return self.quantity - self.reserved
     
@@ -30,6 +32,8 @@ class InventoryUpdate(BaseModel):
     quantity_change: int  # Positive for increase, negative for decrease
     order_id: Optional[str] = None
     reason: Optional[str] = None
+    
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     
     def to_dict(self):
         return self.model_dump() 

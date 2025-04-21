@@ -3,6 +3,7 @@ from enum import Enum
 from datetime import datetime
 import uuid
 from typing import Optional
+from pydantic import ConfigDict
 
 class PaymentMethod(str, Enum):
     CREDIT_CARD = "CREDIT_CARD"
@@ -27,6 +28,9 @@ class Payment(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
     description: Optional[str] = None
+    
+    # Cho phép các kiểu bất kỳ, bao gồm datetime
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     
     def to_dict(self):
         return self.model_dump() 

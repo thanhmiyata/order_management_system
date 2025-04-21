@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from enum import Enum
 import uuid
@@ -22,6 +22,9 @@ class OrderItem(BaseModel):
     product_id: str
     quantity: int
     price: float
+    
+    # Cho phép các kiểu bất kỳ, bao gồm datetime
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 class Order(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -31,3 +34,6 @@ class Order(BaseModel):
     status: OrderStatus = OrderStatus.CREATED
     payment_id: Optional[str] = None
     shipping_id: Optional[str] = None
+    
+    # Cho phép các kiểu bất kỳ, bao gồm datetime
+    model_config = ConfigDict(arbitrary_types_allowed=True)

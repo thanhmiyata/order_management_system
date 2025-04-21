@@ -83,6 +83,10 @@ async def main():
         all_activities.extend(payment_activities)
         all_activities.extend(inventory_activities)
 
+        # In ra thông tin về activities và workflows để debug
+        print(f"Registering {len(all_activities)} activities")
+        print(f"Registering workflows: OrderApprovalWorkflow, PaymentWorkflow, InventoryWorkflow")
+
         # Create a worker that hosts both workflow and activity functions
         worker = Worker(
             client,
@@ -103,7 +107,8 @@ async def main():
 
     except Exception as e:
         print(f"Error connecting to Temporal or running worker: {e}")
-        # Consider adding retry logic or specific error handling here
+        import traceback
+        traceback.print_exc()  # In ra stack trace đầy đủ để debug
 
 if __name__ == "__main__":
     asyncio.run(main())
