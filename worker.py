@@ -5,12 +5,15 @@ from dotenv import load_dotenv # Khôi phục import gốc
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-# Import workflows and activities
-# from workflows.order_workflow import OrderWorkflow # Import cũ
-from workflows.order_workflow import OrderApprovalWorkflow # Import workflow mới
-# To use the actual activities, uncomment the following lines and ensure
-# the activity stubs in the workflow file are also correctly set up.
-from activities.order_activities import all_activities
+# Import workflows
+from workflows.order_workflow import OrderApprovalWorkflow  
+from workflows.payment_workflow import PaymentWorkflow  
+from workflows.inventory_workflow import InventoryWorkflow
+
+# Import activities
+from activities.order_activities import all_activities as order_activities
+from activities.payment_activities import payment_activities
+from activities.inventory_activities import inventory_activities
 
 # --- Temporary Mock Activities --- (Remove when using real activities)
 # Comment out or remove the mock activities section when using the real ones
@@ -74,14 +77,22 @@ async def main():
         client = await Client.connect(f"{host}:{port}")
         print("Successfully connected to Temporal.")
 
+        # Tạo một danh sách tất cả các activities
+        all_activities = []
+        all_activities.extend(order_activities)
+        all_activities.extend(payment_activities)
+        all_activities.extend(inventory_activities)
+
         # Create a worker that hosts both workflow and activity functions
         worker = Worker(
             client,
             task_queue=task_queue_name,
-            # workflows=[OrderWorkflow], # Đăng ký workflow cũ
-            workflows=[OrderApprovalWorkflow], # Đăng ký workflow mới
-            activities=all_activities, # Use real activities when ready
-            # activities=mock_activities, # Use mock activities for now
+            workflows=[
+                OrderApprovalWorkflow,  # Quy trình phê duyệt đơn hàng
+                PaymentWorkflow,        # Quy trình thanh toán
+                InventoryWorkflow       # Quy trình quản lý kho hàng
+            ],
+            activities=all_activities,  # Tất cả các activities
             # You might want to adjust concurrent activity/workflow limits
             # max_concurrent_activities=100,
             # max_concurrent_workflow_tasks=100,
