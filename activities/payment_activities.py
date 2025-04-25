@@ -64,11 +64,11 @@ async def process_payment(payment: dict) -> dict:
     if transaction_id:
         payment_obj.status = PaymentStatus.COMPLETED
         payment_obj.transaction_id = transaction_id
-        payment_obj.updated_at = datetime.now()
+        payment_obj.updated_at = datetime.now().isoformat()
         activity.logger.info(f"Payment {payment_obj.id} completed successfully with transaction {transaction_id}")
     else:
         payment_obj.status = PaymentStatus.FAILED
-        payment_obj.updated_at = datetime.now()
+        payment_obj.updated_at = datetime.now().isoformat()
         activity.logger.error(f"Payment {payment_obj.id} failed")
     
     # Trả về đối tượng payment đã cập nhật
@@ -97,7 +97,7 @@ async def refund_payment(payment: dict) -> dict:
     
     if is_successful:
         payment_obj.status = PaymentStatus.REFUNDED
-        payment_obj.updated_at = datetime.now()
+        payment_obj.updated_at = datetime.now().isoformat()
         payment_obj.description = f"Refunded payment. Original transaction: {payment_obj.transaction_id}"
         activity.logger.info(f"Refund processed successfully for payment {payment_obj.id}")
     else:

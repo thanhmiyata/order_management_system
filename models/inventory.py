@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+from typing import List, Dict, Optional
 from datetime import datetime
 from enum import Enum
 import uuid
@@ -9,6 +9,11 @@ class InventoryStatus(str, Enum):
     LOW_STOCK = "LOW_STOCK"
     OUT_OF_STOCK = "OUT_OF_STOCK"
     DISCONTINUED = "DISCONTINUED"
+    PENDING = "PENDING"
+    RESERVED = "RESERVED"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
 
 class InventoryItem(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -35,5 +40,30 @@ class InventoryUpdate(BaseModel):
     
     model_config = ConfigDict(arbitrary_types_allowed=True)
     
-    def to_dict(self):
-        return self.model_dump() 
+    def to_dict(self) -> Dict:
+        return {
+            "product_id": self.product_id,
+            "quantity_change": self.quantity_change,
+            "order_id": self.order_id
+        }
+
+class InventoryCheckItem(BaseModel):
+    product_id: str
+    quantity: int
+
+class InventoryCheckRequest(BaseModel):
+    items: List[InventoryCheckItem]
+
+class InventoryUpdateItem(BaseModel):
+    product_id: str
+    quantity: int
+
+class InventoryUpdateRequest(BaseModel):
+    order_id: str
+    items: List[InventoryUpdateItem]
+
+class InventoryResponse(BaseModel):
+    order_id: str
+    status: str
+    details: Optional[Dict] = None
+    message: Optional[str] = None 

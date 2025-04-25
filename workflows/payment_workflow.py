@@ -15,7 +15,7 @@ from models.payment import Payment, PaymentStatus
 with workflow.unsafe.imports_passed_through():
     from activities.payment_activities import process_payment, refund_payment, verify_payment_status
 
-@workflow.defn
+@workflow.defn(name="PaymentWorkflow")
 class PaymentWorkflow:
     def __init__(self):
         self._payment_state = None
@@ -32,7 +32,14 @@ class PaymentWorkflow:
         )
 
     @workflow.run
-    async def run(self, payment_input: dict):
+    async def run(self, payment_input: dict) -> dict:
+        """
+        Main payment workflow execution
+        Args:
+            payment_input: Dictionary containing payment information
+        Returns:
+            Dictionary containing final payment state
+        """
         self._payment_state = Payment(**payment_input)
         workflow.logger.info(f"Starting PaymentWorkflow for payment: {self._payment_state.id}, order: {self._payment_state.order_id}")
 
@@ -109,11 +116,11 @@ class PaymentWorkflow:
                                 workflow.logger.error(f"Failed to process refund for payment {self._payment_state.id}: {e}")
                                 # Không thay đổi trạng thái, vẫn là COMPLETED
                 
-                except workflow.CancelledError:
+                except CancelledError:
                     workflow.logger.info(f"Payment workflow cancelled while waiting for refund for {self._payment_state.id}")
                     raise
                 
-                except workflow.TimeoutError:
+                except Exception as e:
                     workflow.logger.info(f"Refund waiting period expired for payment {self._payment_state.id}")
                     # Thanh toán hoàn tất, không có hoàn tiền
 
@@ -128,22 +135,31 @@ class PaymentWorkflow:
         return self._payment_state.to_dict()
 
     @workflow.query
-    def get_status(self) -> str:
-        """Trả về trạng thái hiện tại của thanh toán"""
+    def getStatus(self) -> str:
+        """Get current payment status"""
         if not self._payment_state:
             return "UNKNOWN"
         return self._payment_state.status.value
 
     @workflow.query
-    def get_details(self) -> dict:
-        """Trả về toàn bộ thông tin thanh toán"""
+    def getPaymentDetails(self) -> dict:
+        """Get complete payment details"""
         if not self._payment_state:
             return {}
         return self._payment_state.to_dict()
 
     @workflow.signal
-    async def request_refund(self):
-        """Tín hiệu yêu cầu hoàn tiền"""
+    async def cancelPayment(self, reason: str):
+        """Signal to cancel the payment workflow"""
+        workflow.logger.info(f"Received cancel signal for payment {self._payment_state.id if self._payment_state else 'N/A'}")
+        self._is_cancelled = True
+        if self._payment_state.status == PaymentStatus.PENDING:
+            self._payment_state.status = PaymentStatus.FAILED
+            self._payment_state.description = f"Payment cancelled: {reason}"
+
+    @workflow.signal
+    async def refundPayment(self, reason: str):
+        """Signal to request a refund"""
         workflow.logger.info(f"Received refund request for payment {self._payment_state.id if self._payment_state else 'N/A'}")
         
         if not self._payment_state or self._payment_state.status != PaymentStatus.COMPLETED:
@@ -151,9 +167,18 @@ class PaymentWorkflow:
             return
         
         self._refund_requested = True
-
-    @workflow.signal
-    async def cancel_payment(self):
-        """Tín hiệu hủy workflow thanh toán"""
-        workflow.logger.info(f"Received cancel signal for payment {self._payment_state.id if self._payment_state else 'N/A'}")
-        self._is_cancelled = True 
+        try:
+            refund_result = await workflow.execute_activity(
+                refund_payment,
+                self._payment_state.to_dict(),
+                start_to_close_timeout=timedelta(minutes=5),
+                retry_policy=RetryPolicy(
+                    initial_interval=timedelta(seconds=1),
+                    maximum_interval=timedelta(seconds=10),
+                    maximum_attempts=3,
+                )
+            )
+            self._payment_state = Payment(**refund_result)
+        except Exception as e:
+            workflow.logger.error(f"Refund failed: {str(e)}")
+            raise 

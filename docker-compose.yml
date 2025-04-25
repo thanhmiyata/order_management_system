@@ -12,8 +12,26 @@ services:
       - POSTGRES_PWD=${POSTGRES_PASSWORD:-password}
       - POSTGRES_DB=${POSTGRES_DB:-temporal}
       - POSTGRES_SEEDS=postgres
+      - AUTO_SETUP=true
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
     depends_on:
       - postgres
+
+  temporal-setup:
+    image: temporalio/admin-tools:1.20.1
+    environment:
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "
+      sleep 10 &&
+      tctl --namespace order-management namespace register --retention 24h &&
+      tctl --namespace payment-management namespace register --retention 24h &&
+      tctl --namespace inventory-management namespace register --retention 24h &&
+      tctl namespace list
+      "
+    depends_on:
+      - temporal
 
   postgres:
     image: postgres:15
@@ -41,6 +59,7 @@ services:
       - TEMPORAL_GRPC_ENDPOINT=temporal:7233
       - TEMPORAL_ADDRESS=temporal:7233
       - LOG_LEVEL=debug
+      - TEMPORAL_DEFAULT_NAMESPACE=order-management
     depends_on:
       - temporal
 

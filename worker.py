@@ -4,6 +4,8 @@ from dotenv import load_dotenv # Khôi phục import gốc
 # from python_dotenv import load_dotenv
 from temporalio.client import Client
 from temporalio.worker import Worker
+import logging
+from temporalio import workflow
 
 # Import workflows
 from workflows.order_workflow import OrderApprovalWorkflow  
@@ -14,6 +16,13 @@ from workflows.inventory_workflow import InventoryWorkflow
 from activities.order_activities import all_activities as order_activities
 from activities.payment_activities import payment_activities
 from activities.inventory_activities import inventory_activities
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # --- Temporary Mock Activities --- (Remove when using real activities)
 # Comment out or remove the mock activities section when using the real ones
@@ -70,45 +79,73 @@ async def main():
     load_dotenv() # Load .env file
     host = os.getenv("TEMPORAL_HOST", "localhost")
     port = os.getenv("TEMPORAL_PORT", "7233")
-    task_queue_name = "order-task-queue"
+    
+    # Use default namespace for all workflows
+    namespace = "default"
+    
+    order_task_queue = "order-task-queue"
+    payment_task_queue = "payment-task-queue"
+    inventory_task_queue = "inventory-task-queue"
 
-    print(f"Connecting to Temporal at {host}:{port}...")
+    logger.info(f"Connecting to Temporal at {host}:{port}...")
     try:
-        client = await Client.connect(f"{host}:{port}")
-        print("Successfully connected to Temporal.")
+        # Create client with default namespace
+        logger.info(f"Connecting to namespace: {namespace}")
+        client = await Client.connect(f"{host}:{port}", namespace=namespace)
+        logger.info(f"Successfully connected to namespace: {namespace}")
 
-        # Tạo một danh sách tất cả các activities
-        all_activities = []
-        all_activities.extend(order_activities)
-        all_activities.extend(payment_activities)
-        all_activities.extend(inventory_activities)
-
-        # In ra thông tin về activities và workflows để debug
-        print(f"Registering {len(all_activities)} activities")
-        print(f"Registering workflows: OrderApprovalWorkflow, PaymentWorkflow, InventoryWorkflow")
-
-        # Create a worker that hosts both workflow and activity functions
-        worker = Worker(
+        # Create workers for different task queues with their specific activities
+        logger.info(f"\nCreating order worker for task queue: {order_task_queue}")
+        order_worker = Worker(
             client,
-            task_queue=task_queue_name,
-            workflows=[
-                OrderApprovalWorkflow,  # Quy trình phê duyệt đơn hàng
-                PaymentWorkflow,        # Quy trình thanh toán
-                InventoryWorkflow       # Quy trình quản lý kho hàng
-            ],
-            activities=all_activities,  # Tất cả các activities
-            # You might want to adjust concurrent activity/workflow limits
-            # max_concurrent_activities=100,
-            # max_concurrent_workflow_tasks=100,
+            task_queue=order_task_queue,
+            workflows=[OrderApprovalWorkflow],
+            activities=order_activities,
+            max_concurrent_activities=50,
         )
-        print(f"Starting worker on task queue '{task_queue_name}'...")
-        await worker.run()
-        print("Worker stopped.")
+        logger.info(f"Order worker created with {len(order_activities)} activities")
 
+        logger.info(f"\nCreating payment worker for task queue: {payment_task_queue}")
+        payment_worker = Worker(
+            client,
+            task_queue=payment_task_queue,
+            workflows=[PaymentWorkflow],
+            activities=payment_activities,
+            max_concurrent_activities=50
+        )
+        logger.info(f"Payment worker created with {len(payment_activities)} activities")
+
+        logger.info(f"\nCreating inventory worker for task queue: {inventory_task_queue}")
+        inventory_worker = Worker(
+            client,
+            task_queue=inventory_task_queue,
+            workflows=[InventoryWorkflow],
+            activities=inventory_activities,
+            max_concurrent_activities=50,
+        )
+        logger.info(f"Inventory worker created with {len(inventory_activities)} activities")
+
+        logger.info("\nStarting all workers... Press Ctrl+C to exit")
+        try:
+            await asyncio.gather(
+                order_worker.run(),
+                payment_worker.run(),
+                inventory_worker.run()
+            )
+        except KeyboardInterrupt:
+            logger.info("Received shutdown signal")
     except Exception as e:
-        print(f"Error connecting to Temporal or running worker: {e}")
-        import traceback
-        traceback.print_exc()  # In ra stack trace đầy đủ để debug
+        logger.error(f"Error in worker: {e}")
+        raise
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Sử dụng new_event_loop thay vì run để có thể quản lý event loop tốt hơn
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
+        logger.info("Shutting down gracefully...")
+    finally:
+        loop.close()
+        logger.info("Worker shutdown complete")

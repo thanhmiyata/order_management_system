@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from enum import Enum
 from datetime import datetime
 import uuid
@@ -25,12 +25,18 @@ class Payment(BaseModel):
     method: PaymentMethod
     status: PaymentStatus = PaymentStatus.PENDING
     transaction_id: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now().isoformat())
     description: Optional[str] = None
     
     # Cho phép các kiểu bất kỳ, bao gồm datetime
     model_config = ConfigDict(arbitrary_types_allowed=True)
     
     def to_dict(self):
-        return self.model_dump() 
+        return self.model_dump()
+        
+    @validator("created_at", "updated_at", pre=True)
+    def parse_datetime(cls, value):
+        if isinstance(value, datetime):
+            return value.isoformat()
+        return value 

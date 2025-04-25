@@ -1,0 +1,151 @@
+# Video Demo 1: Quy trình Quản lý Đơn hàng End-to-End
+# ===================================================
+
+1. Khởi động Temporal và các services liên quan
+docker compose down && docker compose up -d
+
+2. Khởi động Worker:
+python worker.py
+
+3. Khởi động API Server:
+uvicorn api.main:app --host 0.0.0.0 --port 8000
+
+4. Kiểm tra Temporal UI: http://localhost:8088
+
+## Phần 2: Quy trình Phê duyệt Đơn hàng
+# -------------------------------------
+
+1. Tạo đơn hàng mới:
+
+curl -X POST "http://localhost:8000/orders" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "CUST001",
+    "items": [
+      {"product_id": "PROD-001", "quantity": 2, "price": 299.99},
+      {"product_id": "PROD-002", "quantity": 1, "price": 499.99}
+    ],
+    "total_amount": 1099.97
+  }'
+
+- Order_id: d5c1d153-1c6f-4bb6-bf72-59f8d2b263b5
+
+2. Theo dõi workflow trên Temporal UI: http://localhost:8088/
+
+
+3. Kiểm tra trạng thái đơn hàng:
+curl "http://localhost:8000/orders/d5c1d153-1c6f-4bb6-bf72-59f8d2b263b5/status"
+
+
+4. Phê duyệt đơn hàng:
+
+curl -X POST "http://localhost:8000/orders/d5c1d153-1c6f-4bb6-bf72-59f8d2b263b5/approve"
+
+
+5. Kiểm tra trạng thái cuối cùng:
+curl "http://localhost:8000/orders/d5c1d153-1c6f-4bb6-bf72-59f8d2b263b5/status"
+
+
+## Phần 3: Quy trình Thanh toán
+# ---------------------------
+
+1. Tạo thanh toán cho đơn hàng đã phê duyệt:
+curl -X POST "http://localhost:8000/payments" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "order_id": "d5c1d153-1c6f-4bb6-bf72-59f8d2b263b5",
+    "amount": 1099.97,
+    "payment_method": "CREDIT_CARD"
+  }'
+
+- Payment_id: f9746b7a-74c0-4d91-81c8-304d045534e9
+
+2. Theo dõi workflow thanh toán trên Temporal UI: http://localhost:8088/
+
+3. Kiểm tra trạng thái thanh toán:
+curl "http://localhost:8000/payments/f9746b7a-74c0-4d91-81c8-304d045534e9/status"
+
+
+## Phần 4: Quy trình Quản lý Kho hàng
+# ---------------------------------
+
+1. Kiểm tra tồn kho:
+curl "http://localhost:8000/inventory/check" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {"product_id": "PROD-001", "quantity": 2},
+      {"product_id": "PROD-002", "quantity": 1},
+      {"product_id": "PROD-003", "quantity": 3},
+      {"product_id": "PROD-004", "quantity": 2}
+    ]
+  }'
+
+
+2. Tạo yêu cầu cập nhật tồn kho:
+curl -X POST "http://localhost:8000/inventory/update" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "order_id": "d5c1d153-1c6f-4bb6-bf72-59f8d2b263b5",
+    "items": [
+      {"product_id": "PROD-001", "quantity": -2},
+      {"product_id": "PROD-002", "quantity": -1}
+    ]
+  }'
+
+3. Theo dõi workflow trên Temporal UI: http://localhost:8088/
+
+4. Phê duyệt cập nhật tồn kho:
+curl -X POST "http://localhost:8000/inventory/d5c1d153-1c6f-4bb6-bf72-59f8d2b263b5/approve"
+
+# Nếu cần hủy cập nhật, sử dụng lệnh sau:
+# curl -X POST "http://localhost:8000/inventory/d5c1d153-1c6f-4bb6-bf72-59f8d2b263b5/cancel"
+
+5. Kiểm tra trạng thái cập nhật:
+curl "http://localhost:8000/inventory/status/d5c1d153-1c6f-4bb6-bf72-59f8d2b263b5"
+
+
+## Phần 5: Quy trình Mua hàng End-to-End
+# -------------------------------------
+
+1. Tạo đơn hàng mới:
+curl -X POST "http://localhost:8000/orders" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "CUST002",
+    "items": [
+      {"product_id": "PROD-003", "quantity": 3, "price": 199.99},
+      {"product_id": "PROD-004", "quantity": 2, "price": 399.99}
+    ],
+    "total_amount": 1399.95
+  }'
+
+- Order_id: a599cd94-5a04-4270-a9a1-86a9d79d8aae
+
+
+2. Theo dõi toàn bộ quy trình trên Temporal UI: http://localhost:8088/
+
+3. Phê duyệt đơn hàng:
+curl -X POST "http://localhost:8000/orders/a599cd94-5a04-4270-a9a1-86a9d79d8aae/approve"
+
+4. Tạo thanh toán:
+curl -X POST "http://localhost:8000/payments" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "order_id": "a599cd94-5a04-4270-a9a1-86a9d79d8aae",
+    "amount": 1399.95,
+    "payment_method": "CREDIT_CARD"
+  }'
+
+- Payment_id: d800b69c-8534-4bcb-b7a8-7b550d10968c
+
+5. Kiểm tra trạng thái cuối cùng:
+# Kiểm tra trạng thái đơn hàng
+curl "http://localhost:8000/orders/a599cd94-5a04-4270-a9a1-86a9d79d8aae/status"
+
+# Kiểm tra trạng thái thanh toán
+curl "http://localhost:8000/payments/d800b69c-8534-4bcb-b7a8-7b550d10968c/status"
+
+# Kiểm tra trạng thái tồn kho
+curl "http://localhost:8000/inventory/status/a599cd94-5a04-4270-a9a1-86a9d79d8aae"
+```
