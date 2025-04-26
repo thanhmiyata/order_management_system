@@ -1,0 +1,98 @@
+PERFORMANCE TEST RESULTS
+=======================
+
+CONCURRENT ORDER PROCESSING
+--------------------------
+
+Test with 10 concurrent orders:
+  Temporal:
+    - Processing time: 0.03 seconds
+    - Orders per second: 336.23
+    - Success rate: 100.0%
+
+  Traditional:
+    - Processing time: 8.00 seconds
+    - Orders per second: 1.25
+    - Success rate: 60.0%
+
+  Performance comparison:
+    - Temporal is 269.12x faster
+    - Temporal success rate is 40.0% higher
+
+
+Test with 50 concurrent orders:
+  Temporal:
+    - Processing time: 0.07 seconds
+    - Orders per second: 758.10
+    - Success rate: 100.0%
+
+  Traditional:
+    - Processing time: 8.00 seconds
+    - Orders per second: 6.25
+    - Success rate: 54.0%
+
+  Performance comparison:
+    - Temporal is 121.36x faster
+    - Temporal success rate is 46.0% higher
+
+
+Test with 100 concurrent orders:
+  Temporal:
+    - Processing time: 0.12 seconds
+    - Orders per second: 835.86
+    - Success rate: 100.0%
+
+  Traditional:
+    - Processing time: 8.01 seconds
+    - Orders per second: 12.49
+    - Success rate: 59.0%
+
+  Performance comparison:
+    - Temporal is 66.93x faster
+    - Temporal success rate is 41.0% higher
+
+
+LARGE ORDER PROCESSING
+---------------------
+
+Test with 10 items in a single order:
+  Temporal:
+    - Processing time: 0.01 seconds
+    - Success: True
+
+  Traditional:
+    - Processing time: 8.00 seconds
+    - Success: False
+
+  Performance comparison:
+    - Temporal is 552.13x faster
+    - Temporal success: True, Traditional success: False
+
+
+Test with 100 items in a single order:
+  Temporal:
+    - Processing time: 0.02 seconds
+    - Success: True
+
+  Traditional:
+    - Processing time: 53.00 seconds
+    - Success: False
+
+  Performance comparison:
+    - Temporal is 3443.92x faster
+    - Temporal success: True, Traditional success: False
+
+
+Test with 1000 items in a single order:
+  Temporal:
+    - Processing time: 0.02 seconds
+    - Success: True
+
+  Traditional:
+    - Processing time: 520.10 seconds
+    - Success: False
+
+  Performance comparison:
+    - Temporal is 31665.59x faster
+    - Temporal success: True, Traditional success: False
+

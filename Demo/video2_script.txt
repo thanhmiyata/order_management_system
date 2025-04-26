@@ -1,0 +1,115 @@
+# Video Demo 2: Xử lý Tình huống Lỗi
+# =================================
+
+1. Khởi động Temporal và các services liên quan
+docker compose down && docker compose up -d
+
+2. Khởi động Worker:
+python worker.py
+
+3. Khởi động API Server:
+uvicorn api.main:app --host 0.0.0.0 --port 8000
+
+4. Kiểm tra Temporal UI: http://localhost:8088
+
+## A. Xử lý Lỗi trong Quy trình Phê duyệt
+# -------------------------------------
+
+1. Tạo đơn hàng với số lượng âm (lỗi validation):
+curl -X POST "http://localhost:8000/orders" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "CUST-ERROR",
+    "items": [
+      {"product_id": "PROD-001", "quantity": -1, "price": 1299.99}
+    ],
+    "total_amount": -1299.99
+  }'
+
+2. Quan sát xử lý lỗi trên Temporal UI: http://localhost:8088/
+- Đây là lỗi validation không retry (non-retryable)
+
+
+## B. Mô phỏng Lỗi Mạng/Hệ thống
+# ---------------------------
+
+1. Tạo đơn hàng bình thường:
+curl -X POST "http://localhost:8000/orders" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "CUST-NETWORK",
+    "items": [
+      {"product_id": "PROD-002", "quantity": 1, "price": 999.99}
+    ],
+    "total_amount": 999.99
+  }'
+
+# - Order_id: 4f9219b5-44bb-402c-8d35-629592821b88
+
+2. Giả lập lỗi mạng bằng cách tắt worker:
+
+
+3. Phê duyệt đơn hàng:
+curl -X POST "http://localhost:8000/orders/4f9219b5-44bb-402c-8d35-629592821b88/approve"
+
+- Tín hiệu được lưu trữ nhưng chưa xử lý (vì worker đã tắt)
+
+4. Khởi động lại worker:
+python worker.py
+
+- Workflow tiếp tục từ chính xác điểm bị ngắt
+- Tín hiệu đã được nhận và xử lý sau khi worker được khởi động lại
+
+## C. Mô phỏng Hủy Giao dịch Kho hàng (Saga Rollback)
+# -------------------------------------------------
+
+1. Tạo order mới để test rollback:
+curl -X POST "http://localhost:8000/orders" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "CUST-ROLLBACK",
+    "items": [
+      {"product_id": "PROD-001", "quantity": 3, "price": 1299.99},
+      {"product_id": "PROD-002", "quantity": 5, "price": 999.99}
+    ],
+    "total_amount": 8899.92
+  }'
+
+# - Order_id: 4945e741-2731-4d28-9201-6262d3245ae6
+
+2. Phê duyệt order:
+curl -X POST "http://localhost:8000/orders/4945e741-2731-4d28-9201-6262d3245ae6/approve"
+
+- Kiểm tra trạng thái order:
+curl "http://localhost:8000/orders/4945e741-2731-4d28-9201-6262d3245ae6/status"
+- Order đã được phê duyệt (status: APPROVED)
+
+3. Điều chỉnh số lượng sản phẩm trong kho hàng:
+curl -X POST "http://localhost:8000/inventory/update" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "order_id": "'"4945e741-2731-4d28-9201-6262d3245ae6"'",
+    "items": [
+      {"product_id": "PROD-001", "quantity": -3},
+      {"product_id": "PROD-002", "quantity": -5}
+    ]
+  }'
+
+# - Reservation_id: 4945e741-2731-4d28-9201-6262d3245ae6
+
+4. Kiểm tra trạng thái inventory workflow:
+curl "http://localhost:8000/inventory/status/4945e741-2731-4d28-9201-6262d3245ae6"
+
+
+5. Hủy đặt trước (rollback):
+curl -X POST "http://localhost:8000/inventory/4945e741-2731-4d28-9201-6262d3245ae6/cancel"
+
+- Quan sát trên Temporal UI: http://localhost:8088
+
+
+6. Kiểm tra trạng thái inventory workflow sau khi rollback
+curl "http://localhost:8000/inventory/status/4945e741-2731-4d28-9201-6262d3245ae6"
+- Xem chi tiết số lượng đã được khôi phục trong response
+
+
+

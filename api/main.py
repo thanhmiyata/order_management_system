@@ -7,6 +7,18 @@ from dotenv import load_dotenv
 from typing import Dict
 import uuid
 import asyncio
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('api.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Assuming models are defined in ../models/order.py relative to this file
 # Adjust the import path if your structure differs
@@ -91,14 +103,14 @@ async def get_workflow_handle(order_id: str) -> WorkflowHandle:
                 if attempt < max_retries - 1:
                     await asyncio.sleep(retry_delay)
                     continue
-                workflow.logger.error(f"Failed to describe workflow: {e}")
+                logger.error(f"Failed to describe workflow: {e}")
                 raise HTTPException(status_code=404, detail=f"Order workflow {workflow_id} not found: {e}")
                 
         except Exception as e:
             if attempt < max_retries - 1:
                 await asyncio.sleep(retry_delay)
                 continue
-            workflow.logger.error(f"Failed to get workflow handle: {e}")
+            logger.error(f"Failed to get workflow handle: {e}")
             raise HTTPException(status_code=404, detail=f"Order workflow {workflow_id} not found: {e}")
     
     raise HTTPException(status_code=404, detail=f"Order workflow {workflow_id} not found after {max_retries} attempts")

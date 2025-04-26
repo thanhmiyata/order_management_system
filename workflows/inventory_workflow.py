@@ -39,6 +39,13 @@ class InventoryWorkflow:
         """
         Workflow quản lý kho hàng với mẫu Saga
         """
+        # --- BEGIN ADD LOGGING ---
+        workflow.logger.info("--- InventoryWorkflow.run started ---")
+        workflow.logger.info(f"Received order_id: {order_id} (type: {type(order_id)})")
+        workflow.logger.info(f"Received inventory_updates: {inventory_updates} (type: {type(inventory_updates)})")
+        if isinstance(inventory_updates, list) and inventory_updates:
+            workflow.logger.info(f"Type of first item in inventory_updates: {type(inventory_updates[0])}")
+        # --- END ADD LOGGING ---
         workflow.logger.info(f"Starting InventoryWorkflow for order: {order_id} with {len(inventory_updates)} product updates")
         
         # Chuyển đổi từ dict sang InventoryUpdate để thêm order_id

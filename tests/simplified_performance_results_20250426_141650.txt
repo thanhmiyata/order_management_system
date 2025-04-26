@@ -1,0 +1,68 @@
+SIMPLIFIED PERFORMANCE TEST RESULTS
+==================================
+
+CONCURRENT ORDER PROCESSING
+--------------------------
+
+Test with 5 concurrent orders:
+  Temporal:
+    - Processing time: 0.02 seconds
+    - Orders per second: 200.50
+    - Success rate: 100.0%
+
+  Traditional:
+    - Processing time: 6.08 seconds
+    - Orders per second: 0.82
+    - Success rate: 60.0%
+
+  Performance comparison:
+    - Temporal is 243.77x faster
+    - Temporal success rate is 40.0% higher
+
+
+Test with 10 concurrent orders:
+  Temporal:
+    - Processing time: 0.03 seconds
+    - Orders per second: 316.75
+    - Success rate: 100.0%
+
+  Traditional:
+    - Processing time: 8.00 seconds
+    - Orders per second: 1.25
+    - Success rate: 90.0%
+
+  Performance comparison:
+    - Temporal is 253.52x faster
+    - Temporal success rate is 10.0% higher
+
+
+LARGE ORDER PROCESSING
+---------------------
+
+Test with 10 items in a single order:
+  Temporal:
+    - Processing time: 0.02 seconds
+    - Success: True
+
+  Traditional:
+    - Processing time: 8.00 seconds
+    - Success: True
+
+  Performance comparison:
+    - Temporal is 443.44x faster
+    - Temporal success: True, Traditional success: True
+
+
+Test with 50 items in a single order:
+  Temporal:
+    - Processing time: 0.02 seconds
+    - Success: True
+
+  Traditional:
+    - Processing time: 28.00 seconds
+    - Success: True
+
+  Performance comparison:
+    - Temporal is 1787.70x faster
+    - Temporal success: True, Traditional success: True
+

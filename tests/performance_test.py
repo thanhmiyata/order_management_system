@@ -178,21 +178,27 @@ async def test_large_data(client, num_items):
 
 async def compare_with_traditional(client, tests):
     """So sánh hiệu suất giữa Temporal và hệ thống truyền thống"""
-    traditional_system = TraditionalSystem()
+    traditional_system = TraditionalSystem() # Re-instantiate TraditionalSystem
+    # Remove calculation parameters
+    # orig_validation_delay = 0.5 
+    # ... (remove all added calculation parameters and logic)
+
     results = {}
     
     # Test 1: Xử lý đồng thời
     if "concurrent" in tests:
         print("Testing concurrent order processing...")
+        # Remove reset logic if it was added for calculation
+        
         for num_orders in [10, 50, 100]:
-            # Temporal
+            # Temporal (Actual Execution)
             print(f"  Temporal: Testing with {num_orders} concurrent orders...")
             temporal_result = await test_concurrent_orders(client, num_orders)
             
-            # Traditional
+            # Traditional (Actual Simulation)
             print(f"  Traditional: Testing with {num_orders} concurrent orders...")
-            trad_start_time = time.time()
-            orders = [
+            trad_start_time = time.time() # Use actual timing
+            orders = [ # Recreate orders for simulation
                 Order(
                     id=f"TRAD-ORDER-{i}-{int(time.time())}",
                     customer_id=f"CUST-TRAD-{i}",
@@ -201,14 +207,19 @@ async def compare_with_traditional(client, tests):
                 )
                 for i in range(num_orders)
             ]
-            trad_results = await traditional_system.process_concurrent_orders(orders)
+            trad_results = await traditional_system.process_concurrent_orders(orders) # Call the simulation
             trad_end_time = time.time()
             
             trad_success_count = sum(1 for r in trad_results if r["status"] == "SUCCESS")
+            # Use original calculation based on actual time
+            trad_total_time = trad_end_time - trad_start_time
+            trad_orders_per_sec = num_orders / trad_total_time if trad_total_time > 0 else float('inf')
+            trad_success_rate = trad_success_count / num_orders if num_orders > 0 else 0
+
             trad_result = {
-                "total_time": trad_end_time - trad_start_time,
-                "orders_per_second": num_orders / (trad_end_time - trad_start_time),
-                "success_rate": trad_success_count / num_orders
+                "total_time": trad_total_time,
+                "orders_per_second": trad_orders_per_sec,
+                "success_rate": trad_success_rate
             }
             
             results[f"concurrent_{num_orders}"] = {
@@ -217,21 +228,21 @@ async def compare_with_traditional(client, tests):
             }
             
             print(f"  Results for {num_orders} orders:")
-            print(f"    Temporal: {temporal_result['orders_per_second']:.2f} orders/sec, {temporal_result['success_rate']*100:.1f}% success")
-            print(f"    Traditional: {trad_result['orders_per_second']:.2f} orders/sec, {trad_result['success_rate']*100:.1f}% success")
+            print(f"    Temporal: {temporal_result['orders_per_second']:.2f} orders/sec, {temporal_result['success_rate']*100:.1f}% success") # Remove (Actual)
+            print(f"    Traditional: {trad_result['orders_per_second']:.2f} orders/sec, {trad_result['success_rate']*100:.1f}% success") # Remove (Calculated)
             print()
-    
+
     # Test 2: Dữ liệu lớn
     if "large_data" in tests:
         print("Testing large order processing...")
         for num_items in [10, 100, 1000]:
-            # Temporal
+            # Temporal (Actual Execution)
             print(f"  Temporal: Testing with {num_items} items in one order...")
             temporal_result = await test_large_data(client, num_items)
             
-            # Traditional
+            # Traditional (Actual Simulation)
             print(f"  Traditional: Testing with {num_items} items in one order...")
-            large_order = Order(
+            large_order = Order( # Recreate order for simulation
                 id=f"TRAD-LARGE-ORDER-{int(time.time())}",
                 customer_id="CUST-TRAD-LARGE",
                 items=[
@@ -241,13 +252,14 @@ async def compare_with_traditional(client, tests):
                 total_amount=100.0 * num_items
             )
             
-            trad_start_time = time.time()
-            trad_result_obj = await traditional_system.process_large_order(large_order)
+            trad_start_time = time.time() # Use actual timing
+            trad_result_obj = await traditional_system.process_large_order(large_order) # Call the simulation
             trad_end_time = time.time()
             
+            # Restore original result calculation
             trad_result = {
                 "processing_time": trad_end_time - trad_start_time,
-                "success": trad_result_obj["status"] == "SUCCESS",
+                "success": trad_result_obj["status"] == "SUCCESS", 
                 "item_count": num_items
             }
             
@@ -257,10 +269,10 @@ async def compare_with_traditional(client, tests):
             }
             
             print(f"  Results for {num_items} items:")
-            print(f"    Temporal: {temporal_result['processing_time']:.2f} sec, Success: {temporal_result['success']}")
-            print(f"    Traditional: {trad_result['processing_time']:.2f} sec, Success: {trad_result['success']}")
+            print(f"    Temporal: {temporal_result['processing_time']:.2f} sec, Success: {temporal_result['success']}") # Remove (Actual)
+            print(f"    Traditional: {trad_result['processing_time']:.2f} sec, Success: {trad_result['success']}") # Remove (Calculated)
             print()
-    
+            
     return results
 
 async def main():

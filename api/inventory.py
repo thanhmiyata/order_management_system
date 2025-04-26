@@ -56,8 +56,14 @@ async def check_inventory(request: InventoryCheckRequest):
         
         # Start a workflow to check inventory
         logger.debug(f"Starting workflow with ID: {workflow_id}")
+        logger.info(f"Calling start_workflow for InventoryWorkflow with ID: {workflow_id}")
+        logger.info(f"Type of workflow_id: {type(workflow_id)}")
+        logger.info(f"Value of inventory_updates: {inventory_updates}")
+        logger.info(f"Type of inventory_updates: {type(inventory_updates)}")
+        if inventory_updates:
+            logger.info(f"Type of first item in inventory_updates: {type(inventory_updates[0])}")
         handle = await client.start_workflow(
-            InventoryWorkflow.run,
+            "InventoryWorkflow",
             args=[workflow_id, inventory_updates],  # Pass arguments as a list
             id=workflow_id,
             task_queue="inventory-task-queue"
@@ -114,7 +120,7 @@ async def update_inventory(request: InventoryUpdateRequest):
         try:
             # Start workflow with correct parameters
             handle = await client.start_workflow(
-                InventoryWorkflow.run,
+                "InventoryWorkflow",
                 args=[workflow_id, inventory_updates],  # Pass workflow_id and inventory_updates
                 id=workflow_id,
                 task_queue="inventory-task-queue"
