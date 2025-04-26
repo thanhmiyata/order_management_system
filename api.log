@@ -1,0 +1,81 @@
+2025-04-26 23:21:50,197 - api.inventory - INFO - Calling start_workflow for InventoryWorkflow with ID: inventory_check_d35a2829-0b29-44fb-8e14-7086f310586a
+2025-04-26 23:21:50,197 - api.inventory - INFO - Type of workflow_id: <class 'str'>
+2025-04-26 23:21:50,197 - api.inventory - INFO - Value of inventory_updates: [{'product_id': 'PROD-001', 'quantity_change': 2, 'order_id': 'inventory_check_d35a2829-0b29-44fb-8e14-7086f310586a'}, {'product_id': 'PROD-002', 'quantity_change': 1, 'order_id': 'inventory_check_d35a2829-0b29-44fb-8e14-7086f310586a'}, {'product_id': 'PROD-003', 'quantity_change': 3, 'order_id': 'inventory_check_d35a2829-0b29-44fb-8e14-7086f310586a'}, {'product_id': 'PROD-004', 'quantity_change': 2, 'order_id': 'inventory_check_d35a2829-0b29-44fb-8e14-7086f310586a'}]
+2025-04-26 23:21:50,197 - api.inventory - INFO - Type of inventory_updates: <class 'list'>
+2025-04-26 23:21:50,197 - api.inventory - INFO - Type of first item in inventory_updates: <class 'dict'>
+2025-04-26 23:23:00,050 - api.inventory - ERROR - RPC error querying workflow inventory_45f856c5-bf58-455f-9935-a99e87979d65: sql: no rows in result set
+Traceback (most recent call last):
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/service.py", line 759, in _rpc_call
+    resp = await client.call(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/bridge/client.py", line 135, in call
+    resp.ParseFromString(await resp_fut)
+temporal_sdk_bridge.RPCError: (5, 'sql: no rows in result set', b'\x08\x05\x12\x1asql: no rows in result set\x1aB\n@type.googleapis.com/temporal.api.errordetails.v1.NotFoundFailure')
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/api/inventory.py", line 202, in get_inventory_status
+    wf_status = await handle.query(InventoryWorkflow.get_status)
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/client.py", line 1545, in query
+    return await self._client._impl.query_workflow(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/client.py", line 4904, in query_workflow
+    resp = await self._client.workflow_service.query_workflow(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/service.py", line 694, in __call__
+    return await self.service_client._rpc_call(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/service.py", line 774, in _rpc_call
+    raise RPCError(message, RPCStatusCode(status), details)
+temporalio.service.RPCError: sql: no rows in result set
+2025-04-26 23:27:27,408 - api.inventory - INFO - Calling start_workflow for InventoryWorkflow with ID: inventory_check_50fdfc4f-b3d7-42d3-9083-a06c53f13431
+2025-04-26 23:27:27,408 - api.inventory - INFO - Type of workflow_id: <class 'str'>
+2025-04-26 23:27:27,408 - api.inventory - INFO - Value of inventory_updates: [{'product_id': 'PROD-001', 'quantity_change': 2, 'order_id': 'inventory_check_50fdfc4f-b3d7-42d3-9083-a06c53f13431'}, {'product_id': 'PROD-002', 'quantity_change': 1, 'order_id': 'inventory_check_50fdfc4f-b3d7-42d3-9083-a06c53f13431'}, {'product_id': 'PROD-003', 'quantity_change': 3, 'order_id': 'inventory_check_50fdfc4f-b3d7-42d3-9083-a06c53f13431'}, {'product_id': 'PROD-004', 'quantity_change': 2, 'order_id': 'inventory_check_50fdfc4f-b3d7-42d3-9083-a06c53f13431'}]
+2025-04-26 23:27:27,408 - api.inventory - INFO - Type of inventory_updates: <class 'list'>
+2025-04-26 23:27:27,408 - api.inventory - INFO - Type of first item in inventory_updates: <class 'dict'>
+2025-04-26 23:28:37,197 - api.inventory - ERROR - RPC error querying workflow inventory_2f5c47cb-8348-46c3-a6c4-eea13d551bf6: sql: no rows in result set
+Traceback (most recent call last):
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/service.py", line 759, in _rpc_call
+    resp = await client.call(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/bridge/client.py", line 135, in call
+    resp.ParseFromString(await resp_fut)
+temporal_sdk_bridge.RPCError: (5, 'sql: no rows in result set', b'\x08\x05\x12\x1asql: no rows in result set\x1aB\n@type.googleapis.com/temporal.api.errordetails.v1.NotFoundFailure')
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/api/inventory.py", line 202, in get_inventory_status
+    wf_status = await handle.query(InventoryWorkflow.get_status)
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/client.py", line 1545, in query
+    return await self._client._impl.query_workflow(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/client.py", line 4904, in query_workflow
+    resp = await self._client.workflow_service.query_workflow(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/service.py", line 694, in __call__
+    return await self.service_client._rpc_call(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/service.py", line 774, in _rpc_call
+    raise RPCError(message, RPCStatusCode(status), details)
+temporalio.service.RPCError: sql: no rows in result set
+2025-04-26 23:29:13,311 - api.inventory - ERROR - RPC error querying workflow inventory_2f5c47cb-8348-46c3-a6c4-eea13d551bf6: sql: no rows in result set
+Traceback (most recent call last):
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/service.py", line 759, in _rpc_call
+    resp = await client.call(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/bridge/client.py", line 135, in call
+    resp.ParseFromString(await resp_fut)
+temporal_sdk_bridge.RPCError: (5, 'sql: no rows in result set', b'\x08\x05\x12\x1asql: no rows in result set\x1aB\n@type.googleapis.com/temporal.api.errordetails.v1.NotFoundFailure')
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/api/inventory.py", line 202, in get_inventory_status
+    wf_status = await handle.query(InventoryWorkflow.get_status)
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/client.py", line 1545, in query
+    return await self._client._impl.query_workflow(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/client.py", line 4904, in query_workflow
+    resp = await self._client.workflow_service.query_workflow(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/service.py", line 694, in __call__
+    return await self.service_client._rpc_call(
+  File "/Users/Krizpham/Thac si/IT6819 - Kiến trúc phần mềm/order_management_system/venv/lib/python3.10/site-packages/temporalio/service.py", line 774, in _rpc_call
+    raise RPCError(message, RPCStatusCode(status), details)
+temporalio.service.RPCError: sql: no rows in result set
+2025-04-26 23:36:23,898 - api.inventory - INFO - Calling start_workflow for InventoryWorkflow with ID: inventory_check_a7d2e4b6-0097-4814-988e-a4fbb7e52475
+2025-04-26 23:36:23,898 - api.inventory - INFO - Type of workflow_id: <class 'str'>
+2025-04-26 23:36:23,898 - api.inventory - INFO - Value of inventory_updates: [{'product_id': 'PROD-001', 'quantity_change': 2, 'order_id': 'inventory_check_a7d2e4b6-0097-4814-988e-a4fbb7e52475'}, {'product_id': 'PROD-002', 'quantity_change': 1, 'order_id': 'inventory_check_a7d2e4b6-0097-4814-988e-a4fbb7e52475'}, {'product_id': 'PROD-003', 'quantity_change': 3, 'order_id': 'inventory_check_a7d2e4b6-0097-4814-988e-a4fbb7e52475'}, {'product_id': 'PROD-004', 'quantity_change': 2, 'order_id': 'inventory_check_a7d2e4b6-0097-4814-988e-a4fbb7e52475'}]
+2025-04-26 23:36:23,898 - api.inventory - INFO - Type of inventory_updates: <class 'list'>
+2025-04-26 23:36:23,898 - api.inventory - INFO - Type of first item in inventory_updates: <class 'dict'>

@@ -6,6 +6,7 @@ import sys
 import os
 import logging
 from dotenv import load_dotenv
+import temporalio.service
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -62,9 +63,17 @@ async def check_inventory(request: InventoryCheckRequest):
         logger.info(f"Type of inventory_updates: {type(inventory_updates)}")
         if inventory_updates:
             logger.info(f"Type of first item in inventory_updates: {type(inventory_updates[0])}")
+        
+        # Tạo dictionary chứa tham số
+        workflow_params = {
+            "order_id": workflow_id,
+            "inventory_updates": inventory_updates
+        }
+        
+        # Bắt đầu workflow với một đối số là dictionary params
         handle = await client.start_workflow(
             "InventoryWorkflow",
-            args=[workflow_id, inventory_updates],  # Pass arguments as a list
+            args=[workflow_params],  # Chỉ truyền một dict trong list args
             id=workflow_id,
             task_queue="inventory-task-queue"
         )
@@ -118,10 +127,16 @@ async def update_inventory(request: InventoryUpdateRequest):
         logger.debug(f"Starting new workflow with ID: {workflow_id}")
         
         try:
-            # Start workflow with correct parameters
+            # Tạo dictionary chứa tham số
+            workflow_params = {
+                "order_id": workflow_id,
+                "inventory_updates": inventory_updates
+            }
+            
+            # Start workflow with correct parameters (single dict)
             handle = await client.start_workflow(
                 "InventoryWorkflow",
-                args=[workflow_id, inventory_updates],  # Pass workflow_id and inventory_updates
+                args=[workflow_params],  # Chỉ truyền một dict trong list args
                 id=workflow_id,
                 task_queue="inventory-task-queue"
             )
@@ -160,39 +175,68 @@ async def update_inventory(request: InventoryUpdateRequest):
     500: {"model": ErrorResponse, "description": "Internal server error"}
 })
 async def get_inventory_status(order_id: str):
+    # Di chuyển việc lấy client ra ngoài try chính để tránh lỗi nếu kết nối thất bại
     try:
-        logger.debug(f"Getting inventory status for order: {order_id}")
         client = await get_temporal_client()
-        workflow_id = f"inventory_{order_id}"
-        
-        try:
-            handle = client.get_workflow_handle(workflow_id)
-            status = await handle.query(InventoryWorkflow.get_status)
-            details = await handle.query(InventoryWorkflow.get_reservation_details)
-            logger.debug(f"Retrieved status: {status}, details: {details}")
-            
-            return InventoryResponse(
-                order_id=order_id,
-                status=status,
-                details=details,
-                message="Inventory status retrieved successfully"
-            )
-        except Exception as e:
-            if "workflow not found" in str(e).lower():
-                logger.error(f"Workflow not found: {workflow_id}")
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Inventory workflow not found"
-                )
-            raise
-            
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        # Nếu không kết nối được Temporal, trả về lỗi 503
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to connect to Temporal service: {e.detail}"
+        )
     except Exception as e:
-        logger.error(f"Error getting inventory status: {str(e)}", exc_info=True)
+        # Lỗi không mong muốn khác khi kết nối
+        logger.error(f"Unexpected error connecting to Temporal: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve inventory status"
+            detail="Unexpected error connecting to workflow service."
+        )
+
+    # Try chính để xử lý logic workflow
+    try:
+        logger.debug(f"Getting inventory status for order: {order_id}")
+        workflow_id = f"inventory_{order_id}"
+        
+        handle = client.get_workflow_handle(workflow_id)
+        # Query trạng thái và chi tiết trong cùng một try để xử lý lỗi chung
+        wf_status = await handle.query(InventoryWorkflow.get_status)
+        details = await handle.query(InventoryWorkflow.get_reservation_details)
+        logger.debug(f"Retrieved status: {wf_status}, details: {details}")
+        
+        return InventoryResponse(
+            order_id=order_id,
+            status=wf_status, # Dùng biến wf_status đã được gán
+            details=details,
+            message="Inventory status retrieved successfully"
+        )
+
+    except temporalio.service.RPCError as rpc_error:
+        # Xử lý lỗi RPC cụ thể (ví dụ: workflow không tìm thấy)
+        logger.error(f"RPC error querying workflow {workflow_id}: {rpc_error}", exc_info=True)
+        if rpc_error.status == temporalio.service.RPCStatusCode.NOT_FOUND or \
+            "not found" in str(rpc_error).lower() or \
+            "sql: no rows in result set" in str(rpc_error).lower():
+                raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Inventory workflow '{workflow_id}' not found or failed early."
+            )
+        else:
+            # Các lỗi RPC khác -> 500
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Temporal service error querying workflow: {rpc_error}"
+            )
+            
+    except HTTPException:
+         # Re-raise HTTPException đã được xử lý (ví dụ: từ get_temporal_client)
+         raise
+
+    except Exception as e:
+        # Các lỗi không mong muốn khác khi lấy handle hoặc query
+        logger.error(f"Unexpected error getting workflow status for {workflow_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Unexpected error retrieving workflow status for {order_id}."
         )
 
 @router.post("/{order_id}/approve", response_model=InventoryResponse, responses={

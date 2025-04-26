@@ -35,18 +35,36 @@ class InventoryWorkflow:
         )
 
     @workflow.run
-    async def run(self, order_id: str, inventory_updates: List[Dict]):
+    async def run(self, params: Dict):
         """
-        Workflow quản lý kho hàng với mẫu Saga
+        Workflow quản lý kho hàng với mẫu Saga.
+        Nhận một dictionary 'params' chứa 'order_id' và 'inventory_updates'.
         """
-        # --- BEGIN ADD LOGGING ---
-        workflow.logger.info("--- InventoryWorkflow.run started ---")
-        workflow.logger.info(f"Received order_id: {order_id} (type: {type(order_id)})")
-        workflow.logger.info(f"Received inventory_updates: {inventory_updates} (type: {type(inventory_updates)})")
-        if isinstance(inventory_updates, list) and inventory_updates:
-            workflow.logger.info(f"Type of first item in inventory_updates: {type(inventory_updates[0])}")
-        # --- END ADD LOGGING ---
-        workflow.logger.info(f"Starting InventoryWorkflow for order: {order_id} with {len(inventory_updates)} product updates")
+        # === LOGGING CHI TIẾT ĐẦU VÀO ===
+        try:
+            workflow.logger.info("--- InventoryWorkflow.run invoked (single Dict param) ---")
+            workflow.logger.info(f"Received params: {params} (Type: {type(params)})")
+            order_id = params.get('order_id')
+            inventory_updates = params.get('inventory_updates')
+            workflow.logger.info(f"Extracted order_id: {order_id} (Type: {type(order_id)})")
+            
+            if inventory_updates is None:
+                workflow.logger.error("Extracted 'inventory_updates' is None!")
+                raise ValueError("Missing 'inventory_updates' in workflow parameters") # Gây lỗi nếu thiếu
+            else:
+                workflow.logger.info(f"Extracted 'inventory_updates': {inventory_updates} (Type: {type(inventory_updates)}, Length: {len(inventory_updates)})")
+                if isinstance(inventory_updates, list) and len(inventory_updates) > 0:
+                    workflow.logger.info(f"Type of first item in inventory_updates: {type(inventory_updates[0])}")
+                elif isinstance(inventory_updates, list) and len(inventory_updates) == 0:
+                     workflow.logger.warning("'inventory_updates' is an empty list.")
+                else:
+                    workflow.logger.warning(f"'inventory_updates' is not a list or is empty: {inventory_updates}")
+        except Exception as log_err:
+             workflow.logger.error(f"Error during initial logging/param extraction: {log_err}")
+             raise # Re-raise để workflow fail
+        # === KẾT THÚC LOGGING CHI TIẾT ===
+        
+        workflow.logger.info(f"Starting InventoryWorkflow logic for order: {order_id}")
         
         # Chuyển đổi từ dict sang InventoryUpdate để thêm order_id
         self._inventory_updates = []

@@ -37,7 +37,7 @@ async def validate_order(order_data: dict) -> bool:
         raise ApplicationError(f"Invalid order total: ${total_amount:.2f}", non_retryable=True)
 
     # Simulate temporary failures (retryable)
-    failure_chance = 0.1 # 10% chance to fail temporarily
+    failure_chance = 0.1 # 10% chance to fail temporarily  - Tỉ lệ lỗi
     if random.random() < failure_chance:
         activity.logger.warning(f"Simulating temporary validation failure for order {order_id}")
         await asyncio.sleep(0.5) # Simulate delay during failure
