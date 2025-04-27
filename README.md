@@ -118,7 +118,6 @@ Sau khi hoàn thành các bước cài đặt và cả 3 thành phần (Docker s
 Thư mục `Demo/` chứa các file kịch bản (`.txt`) chi tiết cho việc quay video demo các tính năng:
 *   `video1_script.txt`: Demo luồng cơ bản.
 *   `video2_script.txt`: Demo xử lý lỗi và rollback.
-*   `video3_script.txt`: Kịch bản chuẩn bị và thảo luận về test hiệu năng (dùng `k6`).
 
 ## Chạy Thử nghiệm Hiệu năng
 

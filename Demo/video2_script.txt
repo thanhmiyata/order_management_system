@@ -29,6 +29,24 @@ curl -X POST "http://localhost:8000/orders" \
 2. Quan sát xử lý lỗi trên Temporal UI: http://localhost:8088/
 - Đây là lỗi validation không retry (non-retryable)
 
+## A2. Xử lý Lỗi Tạm thời (Retryable)
+# ----------------------------------
+# Điều chỉnh tỉ lệ lỗi giả lập lên failure_chance = 0.8
+
+1. Tạo đơn hàng với điều kiện gây lỗi tạm thời:
+# Sử dụng customer_id đặc biệt CUST-RETRY để kích hoạt lỗi giả lập (cần code tương ứng trong activity)
+curl -X POST "http://localhost:8000/orders" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": "CUST-RETRY",
+    "items": [
+      {"product_id": "PROD-003", "quantity": 1, "price": 50.00}
+    ],
+    "total_amount": 50.00
+  }'
+
+2. Quan sát xử lý lỗi và retry trên Temporal UI: http://localhost:8088/
+
 
 ## B. Mô phỏng Lỗi Mạng/Hệ thống
 # ---------------------------
